@@ -219,7 +219,7 @@ class LaneDetectionNode(DTROS):
                 
                 if color == "blue":
                     rospy.loginfo("Blue line detected: stopping for 2 seconds.")
-                    rospy.sleep(2)
+                    rospy.sleep(1)
                     # Check for a duck within 20cm.
                     duck_present = False
                     try:
@@ -277,7 +277,7 @@ class LaneDetectionNode(DTROS):
                     self.maneuver_active = False
             else:
                 # No queued maneuvers: keep moving forward.
-                self.dynamic_motor_control(0.5, 0.5, 0.05, 0.05)
+                self.dynamic_motor_control(0.45, 0.5, 0.05, 0.05)
             self.rate.sleep()
 
 if __name__ == '__main__':
