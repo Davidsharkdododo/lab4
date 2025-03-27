@@ -10,72 +10,125 @@ dot.py detects obstacles in the path, stops at a safe distance to assess the sit
 
 ### Code structure overview
 
-Class Definition:
+## part1lane.py:
 
-AprilTagLaneController inherits from DTROS and encapsulates functionality for lane following and intersection management using AprilTags.
+Initialization:
 
-Initialization (__init__):
+Configures ROS topics (camera, wheels, LEDs, debug images), control parameters (PID gains, base speed), camera calibration, homography, and HSV ranges.
 
-Sets up ROS topics, PID control parameters, camera calibration, homography, and HSV ranges for detecting lanes and red lines.
+Sets up an AprilTag detector with tag-to-action mappings (e.g., red tag → stop 3 sec).
 
-Initializes an AprilTag detector (rate-limited to one detection every 0.33 seconds) and maps tag IDs to specific LED colors and stop durations.
+Initializes state variables for tag visibility, red line detection, and lane following.
 
-Creates publishers for wheel commands, LEDs, and debug images, and subscribes to the compressed camera feed.
+Image Processing:
 
-Image Processing & Detection:
+Undistort & Preprocess: Corrects lens distortion, resizes, and blurs images.
 
-Undistortion & Preprocessing: Methods to correct lens distortion and prepare images (resizing, blurring, grayscale conversion).
+Lane Detection: Uses fixed-height scanning to identify lane pixels and compute a steering error.
 
-Lane Detection: Uses fixed-height scanning with color thresholding to compute a lane offset error.
+Red Line Detection: Applies HSV thresholding to detect red lines and compute distance via homography.
 
-Red Line Detection: Applies HSV masking to identify red lines, compute distance using homography, and annotate the image.
+Control:
 
-AprilTag Detection: Runs at a lower rate, overlays tag information on images, and updates LED states based on detected tags.
+Implements P/PD/PID control functions to compute steering corrections.
 
-Control & Actuation:
+Publishes wheel commands and stops the robot when needed.
 
-Contains PID (or P/PD) control methods to compute steering corrections from lane error.
+Updates LED patterns based on detected tag color.
 
-Publishes wheel commands to adjust speed and direction.
+Callback:
 
-Provides a method to stop the robot and update LED patterns based on tag instructions.
+Processes incoming camera images, performing lane and red line detection.
 
-Callback & Main Loop:
+Executes rate-limited AprilTag detection to overlay tag info, update LEDs, and retrieve stop instructions.
 
-Processes incoming camera images, runs detection algorithms, and handles decision logic to switch between lane following and stopping at intersections.
+Uses detection states to decide whether to continue lane following or stop at an intersection.
 
-Uses ROS’s rospy.spin() in the run method to keep the node active.
+Run Loop:
+
+The node continuously runs using rospy.spin().
+
+## duck.py:
+
+Initialization:
+
+Sets up ROS topics (camera, wheel encoders, commands), calibration, homography, and HSV ranges for blue and duck detection.
+
+Initializes maneuver flags and a queue for detected lane colors.
+
+Image Processing:
+
+Methods for undistorting, resizing, blurring images, and detecting lane colors using HSV thresholds.
+
+Computes distance using homography.
+
+Encoder Callbacks:
+
+Updates left and right wheel encoder ticks.
+
+Motor Control:
+
+Provides dynamic motor control to drive the robot a specified distance and stops the robot.
+
+Camera Callback:
+
+Processes each frame to detect lane colors and queues maneuvers for blue or duck detection.
+
+Main Loop (run):
+
+Executes maneuvers based on queued detections (stopping, waiting for duck clearance) or drives forward if no maneuvers are queued.
+
+## dot.py:
+
+Initialization:
+
+Sets up ROS topics, control parameters, camera calibration, homography, and HSV ranges.
+
+Initializes lane switching cooldown and a blob detector for circle grid (dot) detection.
+
+Configures publishers (undistorted & annotated images) and subscribes to the camera feed.
+
+Image Processing:
+
+Undistorts, resizes, and blurs images.
+
+Detects lane lines via fixed-height scanning to compute a lane error.
+
+Control:
+
+Implements P/PD/PID control functions to compute steering adjustments.
+
+Publishes wheel commands and includes a routine to execute a 45° left turn.
+
+Callback:
+
+Processes incoming images to detect dots and trigger maneuvers (stop, turn, switch lane detection to yellow) if dot spacing exceeds a threshold.
+
+Otherwise, follows the lane using computed error.
 
 
-
-
-## How to use it
+#### How to use it
 
 ### 1. Fork this repository
 
 Use the fork button in the top-right corner of the github page to fork this template repository.
 
 
-### 2. Adjust HSV range for your color lanes
-
-Before running the code, please navigate to CMPUT412-lab3/packages/my_package/src to run color.py. Make changes to the HSV range for your color lanes if necessary.
-
-
-### 3. Build the program
+### 2. Build the program
 
 After that open this folder in the terminal. Once you are in the folder, type in the terminal: dts devel build - H [Vehicle_name] -f to build the program in the duckiebot.
 
 
-### 4. Run Part 1
+### 3. Run Part 1
 
 To run the program, type in the terminal: dts devel run -H [Vehicle_name] -L part1lane. Replace [Vehicle_name] with your robot's name.
 
 
-### 5. Run part 2
+### 4. Run part 2
 
 To run the program, type in the terminal: dts devel run -H [Vehicle_name] -L duck. Replace [Vehicle_name] with your robot's name.
 
 
-### 6. Run part 3
+### 5. Run part 3
 
 To run the program, type in the terminal: dts devel run -H [Vehicle_name] -L dot. Replace [Vehicle_name] with your robot's name.
